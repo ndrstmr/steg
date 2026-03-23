@@ -1,4 +1,21 @@
+# Dependencies
 /vendor/
+
+# IDE
+/.idea/
+/.vscode/
+*.swp
+
+# Claude Code
+/.claude/
+
+# PHP CS Fixer
 /.php-cs-fixer.cache
+
+# PHPUnit
 /.phpunit.result.cache
 /.phpunit.cache
+/coverage.xml
+
+# Composer
+/composer.phar
