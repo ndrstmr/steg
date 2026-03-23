@@ -1,0 +1,48 @@
+{
+    "name": "ndrstmr/steg",
+    "description": "The local inference bridge for PHP — lightweight client for OpenAI-compatible inference servers (vLLM, Ollama, LiteLLM, LocalAI)",
+    "type": "library",
+    "license": "EUPL-1.2",
+    "keywords": ["llm", "inference", "vllm", "ollama", "openai", "ai", "php", "local-first", "bridge"],
+    "authors": [
+        {
+            "name": "Andreas Teumer",
+            "email": "ndrstmr@outlook.de",
+            "homepage": "https://github.com/ndrstmr"
+        }
+    ],
+    "require": {
+        "php": ">=8.4",
+        "psr/log": "^3.0",
+        "symfony/http-client-contracts": "^3.0"
+    },
+    "require-dev": {
+        "symfony/http-client": "7.4.*",
+        "phpunit/phpunit": "^11.0",
+        "phpstan/phpstan": "^2.0",
+        "phpstan/phpstan-strict-rules": "^2.0",
+        "friendsofphp/php-cs-fixer": "^3.0"
+    },
+    "suggest": {
+        "symfony/http-client": "Required for making HTTP requests to inference servers",
+        "ndrstmr/steg-bundle": "Symfony Bundle with DI auto-configuration and profiler panel"
+    },
+    "autoload": {
+        "psr-4": {
+            "Steg\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Steg\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "phpstan/extension-installer": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
