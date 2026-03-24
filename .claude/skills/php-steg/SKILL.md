@@ -1,5 +1,5 @@
 ---
-name: php
+name: php-steg
 description: Use when building PHP 8.4 library code, Symfony 7.4 integrations, or Steg-specific features. Invokes strict typing, PHPStan level 9, PSR standards, and BC-stable interface design. Creates final readonly value objects, BC-stable interfaces, HttpClient integrations, PHPUnit tests, and OpenAI-compatible inference client code. Use when working with Steg core, ndrstmr/steg-bundle, Symfony DI, Contracts, or any inference server integration.
 license: MIT
 metadata:

@@ -12,7 +12,7 @@ Lightweight, BC-stable PHP 8.4 client for OpenAI-compatible local inference serv
 - **Repository:** github.com/ndrstmr/steg
 - **License:** EUPL-1.2
 - **Epic:** 5.1 in LS-KI Portal-KI-Plattform (Post-MVP)
-- **Skill:** `/php` — load for all implementation work
+- **Skill:** `/php-steg` — load for all implementation work
 
 ## Tech Stack
 
@@ -102,7 +102,7 @@ tests/
 ├── Unit/       Model/, Client/, Factory/
 └── Integration/ OpenAiCompatibleClientTest (MockHttpClient)
 
-.claude/skills/php/  # /php skill — load for all PHP work
+.claude/skills/php-steg/  # /php-steg skill — load for all PHP work
 docs/               # getting-started, configuration, supported-backends, symfony-integration
 ```
 
@@ -116,6 +116,6 @@ docs/               # getting-started, configuration, supported-backends, symfon
 
 - ✅ Todo 5.1.1: Repository scaffold complete (40 tests, PHPStan clean, CI green)
 - ✅ Repo live: github.com/ndrstmr/steg
-- ✅ `/php` skill with 5 references
+- ✅ `/php-steg` skill with 5 references
 - ✅ Todo 5.1.2: OpenAiCompatibleClient — 58 tests (18 integration), SSE-streaming, all exception paths, MockClient::withCallback()
 - 🔜 Next: Todo 5.1.3 — StegClientFactory DSN-Validierung + ENV-Variable Support (`STEG_DSN`)
