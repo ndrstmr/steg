@@ -226,3 +226,11 @@ for production use — without framework lock-in.
 ---
 
 Built by 👾 public sector dev crew
+
+## Notice
+
+This repository was developed with the assistance of AI code agents (Claude Code, Anthropic).
+The code was created as part of a development sprint and is not cleared for production use without prior review.
+Use at your own risk.
+
+**License:** European Union Public Licence v. 1.2 (EUPL-1.2) — Copyright © 2026 Andreas Teumer
