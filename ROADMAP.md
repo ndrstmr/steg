@@ -172,7 +172,19 @@ dauerhaften Kontext-Anker für agentische Entwicklung.
 
 ### Todo 5.1.2 — OpenAiCompatibleClient: Tests & Edge Cases
 **Datum:** 2026-03-24
-**Kontext-Usage bei Abschluss:** ~22% (nach Compacting gestartet bei 15%)
+**Dauer:** 5:35 min
+**Verbrauchte Token (Delta):** ~10k (Messages: 60k gesamt, 30%)
+**Kontext-Usage bei Abschluss:** 39% (78k/200k)
+
+| Kategorie | Tokens | Anteil |
+|-----------|--------|--------|
+| System prompt | 5.9k | 2.9% |
+| System tools | 8.7k | 4.4% |
+| Memory files | 3.3k | 1.7% |
+| Skills | 0.4k | 0.2% |
+| Messages | 60k | 30.0% |
+| Free space | 89k | 44.3% |
+| Autocompact buffer | 33k | 16.5% |
 
 **Aufgabe:**
 Vollständige Test-Suite für `OpenAiCompatibleClient` und `MockClient` mit allen
