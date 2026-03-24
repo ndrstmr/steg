@@ -1,12 +1,12 @@
-# 🌊 Steg — The local inference bridge for PHP
+# 🌊 Steg — The Local Inference Bridge for PHP
 
 [![CI](https://github.com/ndrstmr/steg/actions/workflows/ci.yml/badge.svg)](https://github.com/ndrstmr/steg/actions)
 [![License: EUPL-1.2](https://img.shields.io/badge/License-EUPL--1.2-blue.svg)](LICENSE)
 [![PHP](https://img.shields.io/badge/PHP-%3E%3D8.4-8892BF.svg)](https://php.net)
 [![Packagist](https://img.shields.io/packagist/v/ndrstmr/steg)](https://packagist.org/packages/ndrstmr/steg)
 
-Lightweight, BC-stable PHP client for OpenAI-compatible local inference servers.
-Works with vLLM, Ollama, LiteLLM, LocalAI and llama.cpp — no cloud required.
+> A lightweight, BC-stable PHP client for OpenAI-compatible inference servers.
+> Built for local-first AI in production. Zero framework lock-in.
 
 ## Quickstart
 
@@ -15,48 +15,59 @@ composer require ndrstmr/steg symfony/http-client
 ```
 
 ```php
+use Steg\Factory\StegClientFactory;
+
 $steg = StegClientFactory::fromDsn('vllm://localhost:8000/v1?model=llama-3.3-70b-awq');
-echo $steg->ask('What is Leichte Sprache?');
+echo $steg->ask('Erkläre Photosynthese in Leichter Sprache.');
 ```
+
+## Why Steg?
+
+| | Steg | Symfony AI | openai-php/client |
+|---|---|---|---|
+| Focus | Local inference | Multi-provider ecosystem | OpenAI Cloud |
+| BC-Promise | ✅ from v1.0 | ❌ experimental | ✅ |
+| Core dependencies | 2 (`psr/log`, `http-contracts`) | 15+ packages | 5+ packages |
+| vLLM / Ollama | ✅ first-class | ⚠️ via Generic Bridge | ❌ not officially |
+| Streaming | ✅ | ✅ | ✅ |
+| Tool Calling | not in scope | ✅ (Agent framework) | ✅ |
+| Symfony Bundle | optional (`steg-bundle`) | integrated (`ai-bundle`) | community bundle |
+
+Steg is purpose-built for local inference deployments and provides a BC-promise that `symfony/ai-platform` does not (yet) offer.
+Ideal as a stable fallback layer in production systems.
 
 ## Supported Backends
 
-| Backend   | DSN Scheme | Status |
-|-----------|------------|--------|
-| vLLM      | `vllm://`  | ✅     |
-| Ollama    | `ollama://`| ✅     |
-| LiteLLM   | `litellm://`| ✅    |
-| LocalAI   | `localai://`| ✅    |
-| llama.cpp | `llama://` | ✅     |
-| Mock      | `mock://`  | ✅ (tests) |
+| Backend | DSN Format | Status |
+|---------|------------|--------|
+| vLLM | `vllm://host:port/v1?model=name` | ✅ Full support |
+| Ollama | `ollama://host:port?model=name` | ✅ Full support |
+| LiteLLM | `litellm://host:port/v1?model=name` | ✅ Full support |
+| LocalAI | `localai://host:port/v1?model=name` | ✅ Full support |
+| llama.cpp server | `llama://host:port/v1?model=name` | ✅ Full support |
+| OpenAI (Cloud) | `openai://api.openai.com/v1?model=gpt-4o&api_key=sk-...` | ⚠️ Works, not core focus |
+| Mock | `mock://default` | ✅ Tests & offline dev |
+
+> All backends share the same `OpenAiCompatibleClient` — DSN prefixes are convenience aliases
+> that resolve to the correct `base_url` and default port.
 
 ## Usage
 
-### DSN-based client creation
+### Client creation
 
 ```php
 use Steg\Factory\StegClientFactory;
 
-// vLLM
+// DSN (recommended)
 $steg = StegClientFactory::fromDsn('vllm://localhost:8000/v1?model=llama-3.3-70b-awq');
-
-// Ollama
 $steg = StegClientFactory::fromDsn('ollama://localhost:11434?model=llama3.2');
-
-// LiteLLM with API key
-$steg = StegClientFactory::fromDsn('litellm://localhost:4000/v1?model=gpt-4&api_key=sk-...');
-
-// Mock for tests (no server required)
 $steg = StegClientFactory::fromDsn('mock://default?response=Hello+World');
-```
 
-### Array config (e.g. from Symfony parameters)
-
-```php
+// Array config (e.g. from Symfony parameters)
 $steg = StegClientFactory::fromConfig([
     'base_url' => 'http://localhost:8000/v1',
     'model'    => 'llama-3.3-70b-awq',
-    'api_key'  => 'EMPTY',   // vLLM does not require a real key
+    'api_key'  => 'EMPTY',
     'timeout'  => 120,
 ]);
 ```
@@ -64,12 +75,12 @@ $steg = StegClientFactory::fromConfig([
 ### Completion methods
 
 ```php
-// One-liner: single user prompt
-$answer = $steg->ask('Explain quantum computing in simple terms.');
+// One-shot: single user prompt
+$answer = $steg->ask('What is Leichte Sprache?');
 
 // System + user: most common chat pattern
 $answer = $steg->chat(
-    system: 'You translate German texts into Leichte Sprache.',
+    system: 'You translate German administrative texts into Leichte Sprache.',
     user: 'Die Bundesregierung hat neue Gesetze beschlossen.',
 );
 
@@ -94,12 +105,12 @@ foreach ($steg->stream([ChatMessage::user('Write a poem.')]) as $chunk) {
 ```php
 use Steg\Model\CompletionOptions;
 
-$steg->ask('Generate JSON output.', CompletionOptions::precise());       // temperature 0.1
-$steg->ask('Write a short story.', CompletionOptions::creative());       // temperature 0.9
-$steg->ask('Translate.', CompletionOptions::leichteSprache());           // temperature 0.3
-$steg->ask('Anything.', CompletionOptions::default());                   // temperature 0.7
+$steg->ask('Generate JSON.', CompletionOptions::precise());        // temperature 0.1
+$steg->ask('Write a story.', CompletionOptions::creative());       // temperature 0.9
+$steg->ask('Translate.', CompletionOptions::leichteSprache());     // temperature 0.3
+$steg->ask('Anything.', CompletionOptions::default());             // temperature 0.7
 
-// Custom
+// Custom (immutable — returns new instance)
 $opts = CompletionOptions::default()->withTemperature(0.5)->withMaxTokens(2048);
 ```
 
@@ -107,35 +118,11 @@ $opts = CompletionOptions::default()->withTemperature(0.5)->withMaxTokens(2048);
 
 ```php
 if ($steg->isHealthy()) {
-    $models = $steg->listModels();
-    foreach ($models as $model) {
+    foreach ($steg->listModels() as $model) {
         echo $model->id.PHP_EOL;
     }
 }
 ```
-
-## Why not Symfony AI? Why not openai-php/client?
-
-| | Steg | symfony/ai-platform | openai-php/client |
-|---|---|---|---|
-| BC-Promise | ✅ from v1.0.0 | ❌ experimental | ✅ |
-| Local-first focus | ✅ | ⚠️ | ❌ cloud-first |
-| Framework dependency | ✅ none (core) | ❌ Symfony | ❌ none |
-| vLLM / Ollama out-of-box | ✅ | ⚠️ via Generic Bridge | ❌ |
-| Streaming | ✅ | ✅ | ✅ |
-| License | EUPL-1.2 | MIT | MIT |
-
-**Steg** is purpose-built for local inference server deployments and provides a BC-promise that `symfony/ai-platform` does not (yet) offer. Ideal as a stable fallback layer in production systems.
-
-## Symfony Integration
-
-Install the optional bundle for automatic DI configuration and a Symfony Profiler panel:
-
-```bash
-composer require ndrstmr/steg-bundle
-```
-
-See [docs/symfony-integration.md](docs/symfony-integration.md) for details.
 
 ## Exception Handling
 
@@ -166,6 +153,7 @@ try {
 use Steg\Client\MockClient;
 use Steg\StegClient;
 
+// Fixed responses, cycling
 $client = new StegClient(MockClient::withResponses([
     'First response',
     'Second response',
@@ -173,7 +161,44 @@ $client = new StegClient(MockClient::withResponses([
 
 $client->ask('anything'); // → 'First response'
 $client->ask('anything'); // → 'Second response'
+$client->ask('anything'); // → 'First response' (loops)
+
+// Dynamic responses via callback
+$client = new StegClient(MockClient::withCallback(
+    static fn (array $messages) => 'Echo: '.$messages[0]->content,
+));
 ```
+
+## Symfony Integration
+
+Install the optional bundle for automatic DI configuration and a Symfony Profiler panel:
+
+```bash
+composer require ndrstmr/steg-bundle
+```
+
+```yaml
+# config/packages/steg.yaml
+steg:
+    connections:
+        vllm_local:
+            dsn: '%env(STEG_VLLM_DSN)%'
+            timeout: 120
+    default_connection: vllm_local
+```
+
+```php
+use Steg\Client\InferenceClientInterface;
+
+final class MyService
+{
+    public function __construct(
+        private readonly InferenceClientInterface $steg,
+    ) {}
+}
+```
+
+See [docs/symfony-integration.md](docs/symfony-integration.md) for full details.
 
 ## Requirements
 
@@ -182,9 +207,21 @@ $client->ask('anything'); // → 'Second response'
 - `symfony/http-client-contracts: ^3.0`
 - `symfony/http-client: 7.4.*` *(runtime, recommended)*
 
+## Documentation
+
+- [Getting Started](docs/getting-started.md)
+- [Configuration Reference](docs/configuration.md)
+- [Supported Backends](docs/supported-backends.md)
+- [Symfony Integration](docs/symfony-integration.md)
+
 ## License
 
 Licensed under the [European Union Public Licence v1.2 (EUPL-1.2)](LICENSE).
+
+## Origin
+
+Steg was built in a public sector context to solve a real problem: a stable, local LLM client
+for production use — without framework lock-in.
 
 ---
 

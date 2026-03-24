@@ -2,40 +2,75 @@
 
 ## Option A: ndrstmr/steg-bundle (recommended)
 
-The optional bundle provides automatic DI configuration, parameter binding, and a Symfony Profiler panel.
+The optional bundle provides automatic DI configuration, multi-connection support,
+and a Symfony Profiler panel.
 
 ```bash
 composer require ndrstmr/steg-bundle
 ```
 
-The bundle auto-registers `StegClient` as a service when `STEG_DSN` is set:
-
-```env
-# .env
-STEG_DSN=vllm://localhost:8000/v1?model=llama-3.3-70b-awq
+```yaml
+# config/packages/steg.yaml
+steg:
+    connections:
+        vllm_local:
+            dsn: '%env(STEG_VLLM_DSN)%'
+            timeout: 120
+        ollama_dev:
+            dsn: 'ollama://localhost:11434?model=qwen2.5:7b'
+            timeout: 60
+        mock:
+            dsn: 'mock://default'
+    default_connection: vllm_local
 ```
 
 ```php
-// Inject StegClient directly
-class TranslationController
+// Inject via InferenceClientInterface (default connection)
+use Steg\Client\InferenceClientInterface;
+
+final class TranslationService
 {
-    public function __construct(private readonly StegClient $steg) {}
+    public function __construct(
+        private readonly InferenceClientInterface $steg,
+    ) {}
+}
+
+// Named connection via #[Autowire]
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+
+final class MultiModelService
+{
+    public function __construct(
+        #[Autowire(service: 'steg.client.vllm_local')]
+        private readonly InferenceClientInterface $vllm,
+
+        #[Autowire(service: 'steg.client.ollama_dev')]
+        private readonly InferenceClientInterface $ollama,
+    ) {}
 }
 ```
 
-## Option B: Manual Symfony service wiring
+See the [steg-bundle repository](https://github.com/ndrstmr/steg-bundle) for the full documentation.
+
+## Option B: Manual service wiring
 
 Without the bundle, register the client manually in `config/services.yaml`:
 
 ```yaml
-# config/services.yaml
 services:
     Steg\StegClient:
         factory: ['Steg\Factory\StegClientFactory', 'fromDsn']
         arguments:
             - '%env(STEG_DSN)%'
 
-    # Or with explicit config
+    Steg\Client\InferenceClientInterface:
+        alias: Steg\StegClient
+```
+
+Or with explicit config:
+
+```yaml
+services:
     Steg\StegClient:
         factory: ['Steg\Factory\StegClientFactory', 'fromConfig']
         arguments:
@@ -45,12 +80,13 @@ services:
                 timeout: 120
 ```
 
-## Using Steg as LLM_GATEWAY_PROVIDER fallback
+## Dual-Provider Pattern
 
-In the LS-KI Portal-KI-Plattform, Steg serves as the fallback gateway:
+Steg works well as a stable fallback behind a feature flag or ENV switch:
 
 ```php
-// LlmGatewayInterface implementation selector
+use Steg\Client\InferenceClientInterface;
+
 $provider = $_ENV['LLM_GATEWAY_PROVIDER'] ?? 'symfony-ai';
 
 $gateway = match ($provider) {
@@ -60,6 +96,9 @@ $gateway = match ($provider) {
 ```
 
 ```env
-# Switch to Steg fallback
+# Switch to Steg at runtime
 LLM_GATEWAY_PROVIDER=steg
 ```
+
+This pattern is useful when `symfony/ai-platform` is the primary provider but Steg
+serves as a reliable fallback with a BC-stable interface.
