@@ -6,8 +6,10 @@
 /.vscode/
 *.swp
 
-# Claude Code
-/.claude/
+# Claude Code — only ignore local settings, not skills
+/.claude/settings.local.json
+/.claude/todos/
+/.claude/memory/
 
 # PHP CS Fixer
 /.php-cs-fixer.cache
