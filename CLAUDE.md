@@ -1,3 +1,7 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # Steg — Claude Code Instructions
 
 ## Project
@@ -51,6 +55,13 @@ composer validate --strict
 vendor/bin/phpstan analyse --no-progress   # Level 9, zero errors
 vendor/bin/phpunit                          # All tests green
 vendor/bin/php-cs-fixer check              # Zero files to fix
+
+# Run a single test suite
+vendor/bin/phpunit --testsuite Unit
+vendor/bin/phpunit --testsuite Integration
+
+# Run a single test class
+vendor/bin/phpunit tests/Unit/Model/ChatMessageTest.php
 
 # Auto-fix style
 vendor/bin/php-cs-fixer fix
