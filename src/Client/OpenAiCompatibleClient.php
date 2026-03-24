@@ -10,6 +10,7 @@ use Steg\Exception\ConnectionException;
 use Steg\Exception\InferenceException;
 use Steg\Exception\InvalidResponseException;
 use Steg\Exception\ModelNotFoundException;
+use Steg\Model\ChatMessage;
 use Steg\Model\CompletionOptions;
 use Steg\Model\CompletionRequest;
 use Steg\Model\CompletionResponse;
@@ -40,6 +41,14 @@ final class OpenAiCompatibleClient implements InferenceClientInterface
     ) {
     }
 
+    /**
+     * @param list<ChatMessage> $messages
+     *
+     * @throws ConnectionException      When the server is unreachable or times out
+     * @throws ModelNotFoundException   When the requested model is not loaded
+     * @throws InferenceException       When the server returns 4xx/5xx
+     * @throws InvalidResponseException When the response cannot be parsed
+     */
     public function complete(array $messages, ?CompletionOptions $options = null): CompletionResponse
     {
         $request = CompletionRequest::create($messages, $this->model, $options);
@@ -83,6 +92,16 @@ final class OpenAiCompatibleClient implements InferenceClientInterface
         return CompletionResponse::fromApiResponse($data, $durationMs);
     }
 
+    /**
+     * @param list<ChatMessage> $messages
+     *
+     * @return \Generator<int, StreamChunk, mixed, void>
+     *
+     * @throws ConnectionException      When the server is unreachable or times out
+     * @throws ModelNotFoundException   When the requested model is not loaded
+     * @throws InferenceException       When the server returns 4xx/5xx
+     * @throws InvalidResponseException When a stream chunk cannot be parsed
+     */
     public function stream(array $messages, ?CompletionOptions $options = null): \Generator
     {
         $request = CompletionRequest::create($messages, $this->model, $options);
@@ -139,12 +158,19 @@ final class OpenAiCompatibleClient implements InferenceClientInterface
         }
     }
 
+    /**
+     * @return list<ModelInfo>
+     *
+     * @throws ConnectionException      When the server is unreachable
+     * @throws InferenceException       When the server returns an error
+     * @throws InvalidResponseException When the response cannot be parsed
+     */
     public function listModels(): array
     {
         try {
             $response = $this->httpClient->request('GET', $this->baseUrl.'/models', [
                 'headers' => $this->buildHeaders(),
-                'timeout' => 30,
+                'timeout' => $this->timeout,
             ]);
 
             $statusCode = $response->getStatusCode();
@@ -172,6 +198,10 @@ final class OpenAiCompatibleClient implements InferenceClientInterface
         ));
     }
 
+    /**
+     * Returns true if the server is reachable and responds with HTTP 200.
+     * Never throws — returns false on any failure.
+     */
     public function isHealthy(): bool
     {
         try {
@@ -205,11 +235,7 @@ final class OpenAiCompatibleClient implements InferenceClientInterface
         }
 
         if (404 === $statusCode) {
-            // Try to detect model-not-found errors from response body
-            $lower = strtolower($body);
-            if (str_contains($lower, 'model') && (str_contains($lower, 'not found') || str_contains($lower, 'does not exist'))) {
-                throw ModelNotFoundException::forModel($this->model);
-            }
+            throw ModelNotFoundException::forModel($this->model);
         }
 
         throw InferenceException::fromHttpResponse($statusCode, $body);

@@ -88,4 +88,36 @@ final class MockClientTest extends TestCase
 
         self::assertSame('ok', $response->content);
     }
+
+    public function testWithCallbackUsesCallbackForComplete(): void
+    {
+        $client = (new MockClient())->withCallback(
+            static fn (array $messages, ?CompletionOptions $opts): string => 'Dynamic: '.$messages[0]->content,
+        );
+
+        $response = $client->complete([ChatMessage::user('hello')]);
+
+        self::assertSame('Dynamic: hello', $response->content);
+    }
+
+    public function testWithCallbackUsesCallbackForStream(): void
+    {
+        $client = (new MockClient())->withCallback(
+            static fn (array $messages, ?CompletionOptions $opts): string => 'CB response',
+        );
+
+        $chunks = iterator_to_array($client->stream([ChatMessage::user('hi')]));
+        $collected = implode('', array_map(static fn ($c) => $c->delta, $chunks));
+
+        self::assertSame('CB response', $collected);
+    }
+
+    public function testWithCallbackDoesNotMutateOriginal(): void
+    {
+        $original = new MockClient(response: 'original');
+        $withCb = $original->withCallback(static fn () => 'from callback');
+
+        self::assertSame('original', $original->complete([ChatMessage::user('x')])->content);
+        self::assertSame('from callback', $withCb->complete([ChatMessage::user('x')])->content);
+    }
 }

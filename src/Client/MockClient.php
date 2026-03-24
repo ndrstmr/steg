@@ -29,6 +29,9 @@ final class MockClient implements InferenceClientInterface
     /** @var list<string> */
     private array $responses;
 
+    /** @var callable(list<ChatMessage>, ?CompletionOptions): string|null */
+    private $callback;
+
     /**
      * @param list<string>|null $responses Cycle through these responses in order (loops)
      */
@@ -58,9 +61,24 @@ final class MockClient implements InferenceClientInterface
         return new self(healthy: false);
     }
 
+    /**
+     * Returns a clone-like instance with a dynamic response callback.
+     *
+     * The callback receives the messages and options and returns the response string.
+     *
+     * @param callable(list<ChatMessage>, ?CompletionOptions): string $fn
+     */
+    public function withCallback(callable $fn): self
+    {
+        $clone = clone $this;
+        $clone->callback = $fn;
+
+        return $clone;
+    }
+
     public function complete(array $messages, ?CompletionOptions $options = null): CompletionResponse
     {
-        $content = $this->nextResponse();
+        $content = null !== $this->callback ? ($this->callback)($messages, $options) : $this->nextResponse();
         ++$this->callCount;
 
         return new CompletionResponse(
@@ -76,7 +94,7 @@ final class MockClient implements InferenceClientInterface
 
     public function stream(array $messages, ?CompletionOptions $options = null): \Generator
     {
-        $content = $this->nextResponse();
+        $content = null !== $this->callback ? ($this->callback)($messages, $options) : $this->nextResponse();
         ++$this->callCount;
 
         $words = explode(' ', $content);

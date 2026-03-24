@@ -117,4 +117,5 @@ docs/               # getting-started, configuration, supported-backends, symfon
 - ✅ Todo 5.1.1: Repository scaffold complete (40 tests, PHPStan clean, CI green)
 - ✅ Repo live: github.com/ndrstmr/steg
 - ✅ `/php` skill with 5 references
-- 🔜 Next: Todo 5.1.2 — OpenAiCompatibleClient streaming tests + edge cases
+- ✅ Todo 5.1.2: OpenAiCompatibleClient — 58 tests (18 integration), SSE-streaming, all exception paths, MockClient::withCallback()
+- 🔜 Next: Todo 5.1.3 — StegClientFactory DSN-Validierung + ENV-Variable Support (`STEG_DSN`)

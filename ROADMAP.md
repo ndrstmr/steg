@@ -149,23 +149,92 @@ dauerhaften Kontext-Anker für agentische Entwicklung.
 
 ---
 
+### Zwischenschritt 1.C — /compact + Context Reset
+**Datum:** 2026-03-24
+**Context-Usage nach Compacting:** 15% (29k/200k)
+
+| Kategorie | Tokens | Anteil |
+|-----------|--------|--------|
+| System prompt | 5.9k | 2.9% |
+| System tools | 8.5k | 4.2% |
+| Memory files | 3.3k | 1.7% |
+| Skills | 0.4k | 0.2% |
+| Messages | 11.1k | 5.6% |
+| Free space | 138k | 68.9% |
+| Autocompact buffer | 33k | 16.5% |
+
+**Aufgabe:** Session-Compacting nach Abschluss von Todo 5.1.1 + allen Zwischenschritten.
+**Ergebnis:** Kontext auf 15% reduziert — volle Kapazität für Todo 5.1.2 verfügbar.
+
+---
+
+## Protokollierte Steps
+
+### Todo 5.1.2 — OpenAiCompatibleClient: Tests & Edge Cases
+**Datum:** 2026-03-24
+**Kontext-Usage bei Abschluss:** ~22% (nach Compacting gestartet bei 15%)
+
+**Aufgabe:**
+Vollständige Test-Suite für `OpenAiCompatibleClient` und `MockClient` mit allen
+Edge Cases, SSE-Streaming-Tests, Fehler-Mapping und `MockClient::withCallback()`.
+
+**Umsetzung:**
+
+| # | Was | Details |
+|---|-----|---------|
+| 1 | `OpenAiCompatibleClient` PHPDoc | `@param`, `@throws`, `@return` für alle public methods |
+| 2 | Hardkodierter `timeout: 30` in `listModels()` | Auf `$this->timeout` umgestellt |
+| 3 | 404-Handling | Immer `ModelNotFoundException` (kein Body-Parsing mehr nötig) |
+| 4 | Fehlender `use Steg\Model\ChatMessage` | PHPStan Level 9 Fehler behoben |
+| 5 | `MockClient::withCallback()` | Dynamische Responses per Callable, clone-basiert |
+| 6 | Integration-Tests erweitert | Von 6 auf 18 Tests (SSE-Streaming, alle Exception-Pfade) |
+| 7 | Unit-Tests MockClient erweitert | 3 neue Callback-Tests |
+
+**Neue Tests (Integration):**
+- `testCompleteWithMockHttpClient` — Basis Complete inkl. Token-Counting
+- `testCompleteMeasuresDuration` — durationMs ≥ 0
+- `testCompleteThrowsInferenceExceptionOn500` — 5xx → InferenceException
+- `testCompleteThrowsModelNotFoundExceptionOn404` — 404 → ModelNotFoundException
+- `testCompleteThrowsConnectionExceptionOnTransportError` — Transport-Fehler → ConnectionException
+- `testCompleteThrowsInvalidResponseExceptionOnMalformedJson` — kaputtes JSON
+- `testCompleteThrowsInvalidResponseExceptionOnMissingChoices` — leere choices[]
+- `testStreamYieldsChunks` — SSE-Chunks korrekt zusammengesetzt
+- `testStreamLastChunkIsMarked` — isLast=true, finishReason='stop'
+- `testStreamThrowsModelNotFoundExceptionOn404` — 404 im Stream
+- `testStreamThrowsInferenceExceptionOn500` — 500 im Stream
+- `testStreamThrowsConnectionExceptionOnTransportError` — Transport-Fehler im Stream
+- `testStreamIgnoresNonDataLines` — SSE keep-alive-Kommentare ignoriert
+- `testListModelsThrowsOnMissingDataField` — fehlende data[] → InvalidResponseException
+- `testListModelsThrowsConnectionExceptionOnTransportError`
+- `testIsHealthyReturnsFalseOnTransportError`
+
+**Neue Tests (Unit MockClient):**
+- `testWithCallbackUsesCallbackForComplete`
+- `testWithCallbackUsesCallbackForStream`
+- `testWithCallbackDoesNotMutateOriginal`
+
+**Finale CI-Ergebnisse:**
+```
+✅ composer validate --strict   → valid
+✅ phpstan analyse (Level 9)    → no errors
+✅ phpunit                      → 58/58 tests, 103 assertions
+✅ php-cs-fixer check           → 0 files to fix
+```
+
+---
+
 ## Geplante nächste Steps
 
-### Step 3 — OpenAiCompatibleClient: Vollständige Implementierung & Edge Cases
-- Streaming-Tests mit `MockHttpClient` (SSE-Format)
-- Timeout-Handling vertiefen
-- Retry-Logik (optional, konfigurierbar)
-
-### Step 4 — StegClientFactory: Erweiterungen
+### Step 3 — StegClientFactory: Erweiterungen (ehem. Step 4)
 - DSN-Validierung ausbauen (ungültige Ports, fehlende Hosts)
 - Environment-Variable Support (`STEG_DSN`)
 
-### Step 5 — Steg Bundle (ndrstmr/steg-bundle)
+### Step 4 — Steg Bundle (ndrstmr/steg-bundle)
 - Symfony Bundle Scaffold
 - DI Auto-Configuration
 - Profiler Panel (Web Debug Toolbar)
 
-### Step 6 — Release Preparation
+### Step 5 — Release Preparation
 - Packagist-Registrierung
 - openCode.de Veröffentlichung (wenn bereit)
 - CHANGELOG für v1.0.0 finalisieren
