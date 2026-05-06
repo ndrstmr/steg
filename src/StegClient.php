@@ -21,7 +21,7 @@ use Steg\Model\StreamChunk;
  *   $steg = StegClientFactory::fromDsn('vllm://localhost:8000/v1?model=llama-3.3-70b-awq');
  *   echo $steg->ask('What is the capital of Germany?');
  */
-final class StegClient
+final class StegClient implements InferenceClientInterface
 {
     public function __construct(
         private readonly InferenceClientInterface $client,
