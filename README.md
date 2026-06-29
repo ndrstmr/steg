@@ -1,3 +1,15 @@
+> [!IMPORTANT]
+> **Dieses Paket ist umgezogen.** Entwicklung und Releases laufen jetzt im
+> Monorepo [`public-sector-dev-crew/lotse-fleet`](https://github.com/public-sector-dev-crew/lotse-fleet)
+> (Verzeichnis `packages/steg`). Dieses Repository ist eingefroren und wird archiviert.
+>
+> - **Neuer Composer-Name:** `lotse/steg` (vormals `ndrstmr/steg`)
+> - **Umstellen:** `composer remove ndrstmr/steg && composer require lotse/steg`
+> - Der PHP-Namespace `Steg\` bleibt unverändert — nur die `require`-Zeile ändert sich.
+> - Packagist: https://packagist.org/packages/lotse/steg
+
+---
+
 # 🌊 Steg — The Local Inference Bridge for PHP
 
 [![CI](https://github.com/ndrstmr/steg/actions/workflows/ci.yml/badge.svg)](https://github.com/ndrstmr/steg/actions)
